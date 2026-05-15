@@ -46,6 +46,15 @@
     text-transform: uppercase;
     letter-spacing: 0.12em;
   }
+  header .logo {
+    display: inline-block;
+    margin-bottom: 12px;
+    opacity: 0.9;
+    transition: opacity 0.15s;
+  }
+  header .logo:hover { opacity: 1; }
+  header .logo img { display: block; height: 22px; width: auto; }
+  header .header-text { display: flex; flex-direction: column; gap: 4px; }
 
   .grid {
     display: grid;
@@ -434,8 +443,13 @@
 <body>
 
 <header>
-  <h1>Shopify → Odoo Prep</h1>
-  <div class="sub">Eldvarm · v3 block format</div>
+  <div class="header-text">
+    <a class="logo" href="https://eld-admin.netlify.app" aria-label="Eldvarm — back to admin">
+      <img src="https://eldvarm.com/cdn/shop/files/Eldvarm_only_Black_logo.png?v=1776840375" alt="Eldvarm">
+    </a>
+    <h1>Shopify → Odoo Prep</h1>
+  </div>
+  <div class="sub">v3 block format</div>
 </header>
 
 <div class="grid">
