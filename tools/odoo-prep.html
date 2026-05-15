@@ -1,0 +1,1983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Eldvarm — Shopify → Odoo Prep</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --paper: #f4f1ea;
+    --paper-2: #ebe6db;
+    --rule: #1a1a1a;
+    --accent: #b8341c;
+    --muted: #6b6357;
+    --ok: #2d5a3d;
+    --warn: #b8341c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.45;
+    padding: 32px 48px 80px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  header {
+    border-bottom: 2px solid var(--rule);
+    padding-bottom: 16px;
+    margin-bottom: 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  header h1 {
+    font-size: 28px;
+    letter-spacing: -0.01em;
+    font-weight: 600;
+  }
+  header .sub {
+    font-family: 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+  }
+  @media (max-width: 900px) {
+    body { padding: 20px; }
+    .grid { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    padding: 20px;
+  }
+  .panel h2 {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .panel h2 .badge {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 3px 8px;
+    border-radius: 2px;
+  }
+
+  .drop {
+    border: 2px dashed var(--rule);
+    padding: 28px;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.15s;
+    background: var(--paper);
+    margin-bottom: 14px;
+  }
+  .drop:hover, .drop.dragover {
+    background: #fff;
+  }
+  .drop p { font-size: 14px; color: var(--muted); }
+  .drop strong { color: var(--ink); display: block; margin-bottom: 4px; font-size: 15px; }
+  .drop input { display: none; }
+
+  .files {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .file-tile {
+    position: relative;
+    aspect-ratio: 3/4;
+    border: 1px solid var(--rule);
+    background: #fff;
+    overflow: hidden;
+  }
+  .file-tile img { width: 100%; height: 100%; object-fit: cover; }
+  .file-tile .x {
+    position: absolute; top: 2px; right: 2px;
+    background: var(--ink); color: var(--paper); border: none;
+    width: 18px; height: 18px; cursor: pointer; font-size: 11px; line-height: 1;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 120px;
+    font-family: 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 12px;
+    padding: 10px;
+    border: 1px solid var(--rule);
+    background: var(--paper);
+    resize: vertical;
+    margin-bottom: 14px;
+  }
+  textarea:focus { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  button.btn {
+    font-family: inherit;
+    background: var(--ink); color: var(--paper);
+    border: none; padding: 10px 18px; cursor: pointer;
+    font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600;
+  }
+  button.btn:hover { background: var(--accent); }
+  button.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--rule); }
+  button.btn.ghost:hover { background: var(--ink); color: var(--paper); }
+  button.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .output {
+    background: #fff; border: 1px solid var(--rule);
+    padding: 16px;
+    font-family: 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 12px; line-height: 1.5;
+    white-space: pre; overflow-x: auto;
+    min-height: 380px; max-height: 70vh; overflow-y: auto;
+  }
+  .output.placeholder {
+    color: var(--muted); font-family: inherit; font-size: 14px; font-style: italic; white-space: normal;
+  }
+  .output.error {
+    border-color: var(--warn); color: var(--warn); white-space: normal; font-family: inherit;
+  }
+
+  /* Checklist styles */
+  .checklist {
+    background: #fff; border: 1px solid var(--rule);
+    padding: 16px;
+    min-height: 380px; max-height: 70vh; overflow-y: auto;
+    font-size: 13px;
+  }
+  .checklist.placeholder {
+    color: var(--muted); font-style: italic;
+    display: flex; align-items: center; justify-content: center;
+    text-align: center;
+  }
+  .checklist.error {
+    border-color: var(--warn); color: var(--warn);
+  }
+  .checklist .order-header {
+    background: var(--ink); color: var(--paper);
+    margin: -16px -16px 14px -16px;
+    padding: 10px 14px;
+    font-family: 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+  }
+  .checklist .order-header strong { color: #fff; font-weight: 700; }
+  .checklist .order-header .ddp-tag {
+    background: var(--accent); color: #fff;
+    padding: 2px 6px; margin-left: 6px;
+    font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .checklist .flags {
+    background: #fff5f0; border-left: 3px solid var(--warn);
+    padding: 8px 12px; margin-bottom: 14px;
+    font-size: 12px; color: var(--warn);
+  }
+  .checklist .phase {
+    margin-bottom: 18px;
+  }
+  .checklist .phase h4 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em;
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 5px; margin-bottom: 8px;
+    font-weight: 700;
+  }
+  .checklist .step {
+    display: grid;
+    grid-template-columns: 18px 130px 1fr 28px;
+    gap: 8px; align-items: start;
+    padding: 5px 0;
+    border-bottom: 1px dotted #ddd;
+  }
+  .checklist .step:last-child { border-bottom: none; }
+  .checklist .step.done .step-value,
+  .checklist .step.done .step-label {
+    color: #aaa; text-decoration: line-through;
+  }
+  .checklist .step input[type=checkbox] {
+    margin-top: 3px; cursor: pointer;
+  }
+  .checklist .step-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--muted); padding-top: 2px;
+  }
+  .checklist .step-value {
+    font-family: 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 12px; word-break: break-word;
+    background: var(--paper); padding: 4px 8px;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .checklist .step-value:hover {
+    background: var(--paper-2); border-color: var(--ink);
+  }
+  .checklist .step-value.copied {
+    background: #d4eed4; border-color: var(--ok);
+  }
+  .checklist .step-value.empty {
+    color: #aaa; font-style: italic; cursor: default;
+    background: transparent; border-color: transparent;
+  }
+  .checklist .copy-btn {
+    background: transparent; border: 1px solid var(--ink);
+    width: 24px; height: 24px;
+    cursor: pointer; padding: 0; font-size: 11px; line-height: 1;
+  }
+  .checklist .copy-btn:hover { background: var(--ink); color: var(--paper); }
+  .checklist .lines-table {
+    width: 100%; border-collapse: collapse;
+    font-family: 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 11px;
+    margin-bottom: 10px;
+  }
+  .checklist .lines-table th, .checklist .lines-table td {
+    padding: 6px 8px; text-align: left; border-bottom: 1px solid #ddd;
+  }
+  .checklist .lines-table th {
+    background: var(--paper);
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em;
+    border-bottom: 1px solid var(--ink);
+  }
+  .checklist .lines-table td.num { text-align: right; }
+  .checklist .lines-table .copy-cell { cursor: pointer; }
+  .checklist .lines-table .copy-cell:hover { background: var(--paper); }
+  .checklist .lines-table .copy-cell.copied { background: #d4eed4; }
+  .checklist .lines-table tr.done td { color: #aaa; text-decoration: line-through; }
+  .checklist .total-check {
+    background: var(--paper-2); padding: 8px 12px;
+    margin-top: 10px;
+    font-family: 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 12px;
+    border-left: 3px solid var(--ok);
+  }
+  .checklist .total-check.mismatch {
+    border-left-color: var(--warn);
+  }
+  .checklist .progress {
+    position: sticky; top: 0;
+    background: #fff;
+    padding: 6px 0 8px 0;
+    border-bottom: 1px solid var(--rule);
+    margin: -16px -16px 12px -16px;
+    padding: 8px 16px;
+    font-family: 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 11px;
+    color: var(--muted);
+    z-index: 10;
+  }
+  .checklist .progress-bar {
+    height: 3px; background: var(--paper); margin-top: 4px;
+    position: relative;
+  }
+  .checklist .progress-bar .fill {
+    position: absolute; top: 0; left: 0; bottom: 0;
+    background: var(--ok); transition: width 0.2s;
+  }
+
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .tab {
+    padding: 8px 14px;
+    cursor: pointer;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .tab.active { border-bottom-color: var(--accent); font-weight: 700; }
+
+  .status {
+    font-family: 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 11px; color: var(--muted); margin-top: 8px; min-height: 16px;
+  }
+  .status.working { color: var(--accent); }
+  .status.done { color: var(--ok); }
+  .status.err { color: var(--warn); }
+
+  details.help {
+    margin-top: 20px; border: 1px solid var(--rule); padding: 12px 16px; background: var(--paper-2);
+  }
+  details.help summary {
+    cursor: pointer; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600;
+  }
+  details.help div { margin-top: 12px; font-size: 13px; }
+  details.help ul { margin-left: 18px; }
+  details.help li { margin-bottom: 4px; }
+
+  .key-row { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; }
+  .key-row label {
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; white-space: nowrap;
+  }
+  .key-row input {
+    flex: 1; padding: 8px 10px;
+    font-family: 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 12px; border: 1px solid var(--rule); background: var(--paper);
+  }
+  .key-row input:focus { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+  .hint { font-size: 11px; color: var(--muted); font-style: italic; margin-top: -8px; margin-bottom: 14px; }
+
+  .calc-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px;
+  }
+  @media (max-width: 700px) { .calc-grid { grid-template-columns: 1fr; } }
+  .calc-section { background: var(--paper); border: 1px solid var(--rule); padding: 12px; }
+  .calc-section h3 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em;
+    margin-bottom: 10px; font-weight: 700; color: var(--muted);
+  }
+  .calc-row {
+    display: grid; grid-template-columns: 1.4fr 0.5fr 1fr;
+    gap: 6px; margin-bottom: 6px; align-items: center;
+  }
+  .calc-row label { font-size: 12px; }
+  .calc-row input, .calc-row select {
+    font-family: 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 12px; padding: 5px 7px;
+    border: 1px solid var(--rule); background: #fff; width: 100%;
+  }
+  .calc-row input:focus, .calc-row select:focus {
+    outline: 2px solid var(--accent); outline-offset: -2px;
+  }
+  .calc-row input[type=number] { text-align: right; }
+  .calc-row .currency-prefix { font-size: 11px; color: var(--muted); text-align: right; }
+
+  .country-rates {
+    display: grid; grid-template-columns: 1fr auto auto; gap: 4px 8px;
+    margin-bottom: 4px; font-size: 12px; align-items: center;
+  }
+  .country-rates input {
+    width: 60px;
+    font-family: 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 12px; padding: 3px 6px;
+    border: 1px solid var(--rule); background: #fff; text-align: right;
+  }
+
+  .calc-result {
+    background: var(--paper-2); border: 1px solid var(--rule);
+    padding: 12px; margin-bottom: 14px;
+  }
+  .calc-result h3 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em;
+    margin-bottom: 10px; font-weight: 700;
+  }
+  .result-table {
+    width: 100%; border-collapse: collapse;
+    font-family: 'SF Mono', Menlo, Consolas, monospace; font-size: 12px;
+  }
+  .result-table th, .result-table td {
+    padding: 5px 8px; text-align: right; border-bottom: 1px dotted #999;
+  }
+  .result-table th:first-child, .result-table td:first-child { text-align: left; }
+  .result-table th {
+    font-weight: 700; border-bottom: 1px solid var(--rule);
+    text-transform: uppercase; font-size: 10px; letter-spacing: 0.08em;
+  }
+  .result-table tr.total td {
+    font-weight: 700; border-top: 1px solid var(--rule); border-bottom: none; padding-top: 8px;
+  }
+  .result-table tr.match td { color: var(--ok); }
+  .result-table tr.mismatch td { color: var(--warn); }
+
+  .product-line {
+    display: grid; grid-template-columns: 1.6fr 0.4fr 0.9fr 24px;
+    gap: 6px; margin-bottom: 4px; align-items: center;
+  }
+  .product-line input {
+    font-family: 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 11px; padding: 4px 6px;
+    border: 1px solid var(--rule); background: #fff; width: 100%;
+  }
+  .product-line .ph-label {
+    font-size: 10px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    text-align: center; padding-bottom: 2px;
+  }
+  .product-line button.rm {
+    background: var(--ink); color: var(--paper); border: none;
+    width: 22px; height: 22px; cursor: pointer; font-size: 12px; line-height: 1;
+  }
+
+  .small-link {
+    background: none; border: none; color: var(--accent);
+    font-family: inherit; font-size: 11px; cursor: pointer;
+    text-decoration: underline; padding: 0;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Shopify → Odoo Prep</h1>
+  <div class="sub">Eldvarm · v3 block format</div>
+</header>
+
+<div class="grid">
+
+  <div class="panel">
+    <h2>Input <span class="badge">Step 1</span></h2>
+
+    <div class="key-row">
+      <label>API key</label>
+      <input type="password" id="apiKey" placeholder="sk-ant-..." autocomplete="off">
+    </div>
+    <div class="hint">Saved in this browser. Get one at console.anthropic.com. <button class="small-link" id="forgetKey" style="margin-left:8px">forget key</button></div>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="screenshots">Screenshots</div>
+      <div class="tab" data-tab="csv">CSV / paste</div>
+      <div class="tab" data-tab="calc">Manual DDP</div>
+    </div>
+
+    <div id="tab-screenshots">
+      <div class="drop" id="drop">
+        <strong>Drop screenshots here</strong>
+        <p>or click to choose · PNG / JPG · multiple OK</p>
+        <input type="file" id="fileInput" accept="image/*" multiple>
+      </div>
+      <div class="files" id="files"></div>
+    </div>
+
+    <div id="tab-csv" style="display:none">
+      <textarea id="csvInput" placeholder="Paste Shopify CSV export or raw order text..."></textarea>
+    </div>
+
+    <div id="tab-calc" style="display:none">
+
+      <div class="calc-grid">
+        <div class="calc-section">
+          <h3>Order header</h3>
+          <div class="calc-row">
+            <label>Country</label><span></span>
+            <select id="calcCountry">
+              <option value="UK">United Kingdom</option>
+              <option value="US">United States</option>
+              <option value="Switzerland">Switzerland</option>
+              <option value="Norway">Norway</option>
+            </select>
+          </div>
+          <div class="calc-row">
+            <label>Currency</label><span></span>
+            <select id="calcCurrency">
+              <option value="GBP">GBP £</option>
+              <option value="USD">USD $</option>
+              <option value="CHF">CHF</option>
+              <option value="NOK">NOK kr</option>
+            </select>
+          </div>
+          <div class="calc-row">
+            <label>Order total local</label>
+            <span class="currency-prefix" id="curPrefix1">£</span>
+            <input type="number" step="0.01" id="calcOrderTotal" placeholder="0.00">
+          </div>
+          <div class="calc-row">
+            <label>EUR amount paid</label>
+            <span class="currency-prefix">€</span>
+            <input type="number" step="0.01" id="calcEurPaid" placeholder="0.00">
+          </div>
+          <div class="calc-row">
+            <label>Discount %</label><span></span>
+            <input type="number" step="0.01" id="calcDiscount" placeholder="0" value="0">
+          </div>
+        </div>
+
+        <div class="calc-section">
+          <h3>Margin rates (editable)</h3>
+          <div class="country-rates"><span>United Kingdom</span><input type="number" step="0.1" id="rateUK" value="30"><span>%</span></div>
+          <div class="country-rates"><span>United States</span><input type="number" step="0.1" id="rateUS" value="30"><span>%</span></div>
+          <div class="country-rates"><span>Switzerland</span><input type="number" step="0.1" id="rateSwitzerland" value="30"><span>%</span></div>
+          <div class="country-rates"><span>Norway</span><input type="number" step="0.1" id="rateNorway" value="35"><span>%</span></div>
+
+          <h3 style="margin-top:14px">FX rate</h3>
+          <div style="font-family:'SF Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:6px">
+            Auto: local total ÷ EUR paid. Override if needed.
+          </div>
+          <div class="calc-row">
+            <label>1 EUR =</label>
+            <span class="currency-prefix" id="curPrefix3">£</span>
+            <input type="number" step="0.000001" id="calcFxOverride" placeholder="auto">
+          </div>
+          <button class="small-link" id="resetFx">↻ reset to auto</button>
+        </div>
+      </div>
+
+      <div class="calc-section" style="margin-bottom:14px">
+        <h3>Product lines (local price each, ex-VAT)</h3>
+        <div class="product-line">
+          <div class="ph-label">SKU & name</div>
+          <div class="ph-label">Qty</div>
+          <div class="ph-label">Local price</div>
+          <div></div>
+        </div>
+        <div id="productLines"></div>
+        <div class="row" style="margin-top:8px">
+          <button class="btn ghost" id="addLineBtn" style="padding:6px 12px;font-size:11px">+ Add product line</button>
+        </div>
+      </div>
+
+      <div class="calc-section" style="margin-bottom:14px">
+        <h3>Transport &amp; duties (EUR overrides)</h3>
+        <div style="font-family:'SF Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:8px">
+          Local shipping converts via FX. Override transport or duties in EUR to fix them, products adjust to keep total = EUR paid.
+        </div>
+        <div class="calc-row">
+          <label>Local shipping</label>
+          <span class="currency-prefix" id="curPrefix2">£</span>
+          <input type="number" step="0.01" id="calcTransport" placeholder="0.00" value="0">
+        </div>
+        <div class="calc-row">
+          <label>Transport € override</label>
+          <span class="currency-prefix">€</span>
+          <input type="number" step="0.01" id="calcTransportEurOverride" placeholder="auto">
+        </div>
+        <div class="calc-row">
+          <label>Duties € override</label>
+          <span class="currency-prefix">€</span>
+          <input type="number" step="0.01" id="calcDutiesEurOverride" placeholder="auto">
+        </div>
+        <button class="small-link" id="resetOverrides" style="margin-top:4px">↻ reset both to auto</button>
+      </div>
+
+      <div class="calc-result">
+        <h3>Calculated Odoo lines</h3>
+        <table class="result-table" id="calcTable">
+          <thead>
+            <tr>
+              <th>Line</th>
+              <th>Qty</th>
+              <th>Unit € (Odoo)</th>
+              <th>Subtotal €</th>
+            </tr>
+          </thead>
+          <tbody id="calcTableBody"></tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <div class="row">
+      <button class="btn" id="generateBtn">Generate block</button>
+      <button class="btn ghost" id="clearBtn">Clear</button>
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Manual entry checklist <span class="badge">Step 2</span></h2>
+    <div class="tabs" style="margin-bottom:10px">
+      <div class="tab active" data-otab="checklist">Checklist</div>
+      <div class="tab" data-otab="raw">Raw block</div>
+    </div>
+
+    <div id="otab-checklist">
+      <div class="checklist placeholder" id="checklist">
+        Fill in customer details on the left, then hit Generate. The step-by-step checklist appears here.
+      </div>
+    </div>
+
+    <div id="otab-raw" style="display:none">
+      <div class="output placeholder" id="output">
+        Block appears here.
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:14px">
+      <button class="btn ghost" id="copyBtn" disabled>Copy raw block</button>
+      <button class="btn ghost" id="downloadBtn" disabled>Download .txt</button>
+    </div>
+  </div>
+
+</div>
+
+<details class="help">
+  <summary>How this works</summary>
+  <div>
+    <ul>
+      <li><strong>Screenshots:</strong> drop Shopify order screenshots, Claude reads them and produces the v3 block.</li>
+      <li><strong>CSV:</strong> paste a Shopify CSV export instead.</li>
+      <li><strong>Manual DDP:</strong> the old spreadsheet, but live. Edit margin rates per country if they ever change. Generate block reads from these inputs, no API call needed.</li>
+      <li>The <strong>Checklist</strong> tab on the right shows a step-by-step list — click each value to copy, tick the box once it's typed into Odoo. Progress bar tracks completion.</li>
+      <li><strong>Raw block</strong> tab is still available for the full text version if you prefer copying that.</li>
+      <li>Workflow: keep this window next to Odoo. For each step in the checklist, click the value to copy, paste into Odoo, tick the checkbox.</li>
+    </ul>
+  </div>
+</details>
+
+<script>
+const EXTRACTOR_PROMPT = `# Eldvarm — Shopify Order Extractor
+
+You read Shopify order screenshots (or CSV) and return STRUCTURED JSON for the helper app to display and let the user edit before generating the final Odoo block.
+
+Return ONLY valid JSON, no prose, no markdown fences. The JSON shape:
+
+{
+  "orders": [
+    {
+      "type": "EU" | "DDP" | "SKIP",
+      "skip_reason": "...",  // only if type === "SKIP"
+      "flags": ["⚠ ..."],     // any of: refund/cancellation, billing differs from shipping, missing SKU, multiple same SKU, EUR or FX not visible
+      "order_number": "#1234",
+      "customer": {
+        "first": "...",
+        "last": "...",
+        "email": "...",
+        "phone": "...",
+        "street1": "...",     // BILLING address (goes on main contact card)
+        "street2": "",
+        "city": "...",
+        "zip": "...",
+        "country": "United Kingdom"   // full name, not code
+      },
+      "shipping_differs": false,
+      "shipping_address": null,        // { street1, street2, city, zip, country } when shipping_differs is true. This is where goods physically go.
+
+      // EU-only:
+      "eu": {
+        "total_eur": 0,
+        "transport_eur": 0,    // shipping charged in EUR; 0 if free shipping
+        "lines": [
+          { "sku": "ABC-123", "name": "Product name", "qty": 1, "price_eur": 0, "discount_pct": 0 }
+        ]
+      },
+
+      // DDP-only:
+      "ddp": {
+        "country": "UK" | "US" | "Switzerland" | "Norway",
+        "currency": "GBP" | "USD" | "CHF" | "NOK",
+        "order_total_local": 0,
+        "eur_paid": 0,
+        "fx_rate": null,        // 1 EUR = X local; null if not shown explicitly. App will compute from local/eur.
+        "discount_pct": 0,
+        "transport_local": 0,
+        "lines": [
+          { "sku": "ABC-123", "name": "Product name", "qty": 1, "price_local": 0 }
+        ]
+      }
+    }
+  ]
+}
+
+## Rules
+
+- Type EU: SHIPPING address is in EU, paid in EUR. (Shipping country drives the type, not billing.)
+- Type DDP: SHIPPING address is outside EU, paid in local currency. Supported SHIPPING countries: UK, US, Switzerland, Norway. Anything else (Canada, Australia, etc.), type "SKIP" with skip_reason. Note: only the SHIPPING country matters for type/margin/duties. Billing country is irrelevant for this decision.
+- "country" code in ddp is short (UK, US, Switzerland, Norway), based on the SHIPPING country.
+- Currency codes: GBP, USD, CHF, NOK.
+- Name split on FIRST space. A name like "Anna de la Torre" splits into first "Anna", last "de la Torre".
+- Country names not codes in customer.country: NL → Netherlands, US → United States, GB → United Kingdom.
+- For DDP, prices are in local currency (what the customer saw on the Shopify checkout, ex-VAT customer-facing price).
+- Strip markdown link formatting from emails: [x@y.com](mailto:x@y.com) → x@y.com.
+- Multi-screenshot orders: match by customer name and order number, combine into one entry.
+- If something is unreadable, set the field to null and add a flag describing what's missing.
+- Set discount_pct as percentage number (e.g. 10 means 10%), 0 if no discount.
+- **Address handling convention (CRITICAL, do not get this wrong):**
+  Eldvarm's rule: BILLING address goes on the main contact card. SHIPPING address goes on a child Delivery contact (only when different).
+  - The \`customer\` block in the JSON contains the BILLING address — i.e. the address shown under "Billing address" on the Shopify order page.
+  - If SHIPPING address (shown under "Shipping address" on Shopify) differs from billing, set \`shipping_differs: true\` and put the SHIPPING address in \`shipping_address\`.
+  - If shipping = billing, set \`shipping_differs: false\` and \`shipping_address: null\`.
+  - "Differs" means street1, city, zip, OR country differ (ignoring whitespace and case). Minor formatting differences alone do not count.
+  - Crucial nuance: even when billing and shipping are in different countries, \`customer.country\` is the BILLING country. The DDP type and margin use the SHIPPING country (from \`shipping_address.country\` or, when not differs, from \`customer.country\`).
+  - Worked example: Shopify shows "Shipping address: 165 Woody Row Rd, Red Hook NY, United States" and "Billing address: 30 Roxborough St E, Toronto ON, Canada". Order is paid in USD. Output:
+    - \`customer\` block: street1="30 Roxborough St E", city="Toronto", zip="M4W 1V6", country="Canada" (billing, goes on main card)
+    - \`shipping_differs\`: true
+    - \`shipping_address\`: { street1: "165 Woody Row Rd", city: "Red Hook", zip: "12571", country: "United States" } (shipping, goes on child Delivery)
+    - \`type\`: "DDP" (because shipping is US, not because billing is Canada)
+    - \`ddp.country\`: "US" (from shipping)
+    - \`ddp.currency\`: "USD"
+
+Return ONLY the JSON object.`;
+
+
+const state = { files: [], csv: '', mode: 'screenshots' };
+
+const apiKeyEl = document.getElementById('apiKey');
+apiKeyEl.value = localStorage.getItem('eldvarm_key') || '';
+apiKeyEl.addEventListener('input', () => localStorage.setItem('eldvarm_key', apiKeyEl.value));
+
+document.getElementById('forgetKey').addEventListener('click', () => {
+  localStorage.removeItem('eldvarm_key');
+  apiKeyEl.value = '';
+});
+
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    state.mode = t.dataset.tab;
+    document.getElementById('tab-screenshots').style.display = state.mode === 'screenshots' ? '' : 'none';
+    document.getElementById('tab-csv').style.display = state.mode === 'csv' ? '' : 'none';
+    document.getElementById('tab-calc').style.display = state.mode === 'calc' ? '' : 'none';
+  });
+});
+
+const drop = document.getElementById('drop');
+const fileInput = document.getElementById('fileInput');
+const filesEl = document.getElementById('files');
+
+drop.addEventListener('click', () => fileInput.click());
+drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('dragover'); });
+drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
+drop.addEventListener('drop', e => {
+  e.preventDefault();
+  drop.classList.remove('dragover');
+  handleFiles(e.dataTransfer.files);
+});
+fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+async function handleFiles(fileList) {
+  for (const f of fileList) {
+    if (!f.type.startsWith('image/')) continue;
+    const dataUrl = await new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result);
+      r.onerror = rej;
+      r.readAsDataURL(f);
+    });
+    state.files.push({ name: f.name, dataUrl, mediaType: f.type === 'image/jpg' ? 'image/jpeg' : f.type });
+  }
+  renderFiles();
+}
+
+function renderFiles() {
+  filesEl.innerHTML = '';
+  state.files.forEach((f, i) => {
+    const tile = document.createElement('div');
+    tile.className = 'file-tile';
+    tile.innerHTML = `<img src="${f.dataUrl}" alt=""><button class="x" data-i="${i}">×</button>`;
+    filesEl.appendChild(tile);
+  });
+  filesEl.querySelectorAll('.x').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.files.splice(parseInt(btn.dataset.i), 1);
+      renderFiles();
+    });
+  });
+}
+
+document.getElementById('csvInput').addEventListener('input', e => state.csv = e.target.value);
+
+// ---------- DDP CALCULATOR ----------
+const productLinesEl = document.getElementById('productLines');
+const calcTableBody = document.getElementById('calcTableBody');
+const curSymbols = { GBP: '£', USD: '$', CHF: 'CHF', NOK: 'kr' };
+
+let productLines = [{ combo: '', qty: 1, price: 0 }];
+
+function escapeAttr(s) { return String(s).replace(/"/g, '&quot;'); }
+
+function renderProductLines() {
+  productLinesEl.innerHTML = '';
+  productLines.forEach((p, i) => {
+    const div = document.createElement('div');
+    div.className = 'product-line';
+    div.innerHTML = `
+      <input type="text" placeholder="[SKU] product name" data-field="combo" data-i="${i}" value="${escapeAttr(p.combo || '')}">
+      <input type="number" min="1" step="1" data-field="qty" data-i="${i}" value="${p.qty}">
+      <input type="number" step="0.01" data-field="price" data-i="${i}" value="${p.price}">
+      <button class="rm" data-rm="${i}" title="remove">×</button>`;
+    productLinesEl.appendChild(div);
+  });
+  productLinesEl.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('input', e => {
+      const i = parseInt(e.target.dataset.i);
+      const f = e.target.dataset.field;
+      if (f === 'combo') productLines[i].combo = e.target.value;
+      else if (f === 'qty') productLines[i].qty = parseFloat(e.target.value) || 0;
+      else if (f === 'price') productLines[i].price = parseFloat(e.target.value) || 0;
+      recalc();
+    });
+  });
+  productLinesEl.querySelectorAll('[data-rm]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const i = parseInt(e.currentTarget.dataset.rm);
+      productLines.splice(i, 1);
+      if (productLines.length === 0) productLines.push({ combo: '', qty: 1, price: 0 });
+      renderProductLines();
+      recalc();
+    });
+  });
+}
+
+document.getElementById('addLineBtn').addEventListener('click', () => {
+  productLines.push({ combo: '', qty: 1, price: 0 });
+  renderProductLines();
+  recalc();
+});
+
+document.getElementById('calcCurrency').addEventListener('change', e => {
+  const sym = curSymbols[e.target.value] || '';
+  document.getElementById('curPrefix1').textContent = sym;
+  document.getElementById('curPrefix2').textContent = sym;
+  document.getElementById('curPrefix3').textContent = sym;
+  const cur = e.target.value;
+  const map = { GBP: 'UK', USD: 'US', CHF: 'Switzerland', NOK: 'Norway' };
+  if (map[cur]) document.getElementById('calcCountry').value = map[cur];
+  recalc();
+});
+
+document.getElementById('calcCountry').addEventListener('change', recalc);
+['calcOrderTotal','calcEurPaid','calcDiscount','calcTransport','calcFxOverride',
+ 'calcTransportEurOverride','calcDutiesEurOverride',
+ 'rateUK','rateUS','rateSwitzerland','rateNorway'].forEach(id => {
+  document.getElementById(id).addEventListener('input', recalc);
+});
+
+document.getElementById('resetFx').addEventListener('click', () => {
+  document.getElementById('calcFxOverride').value = '';
+  recalc();
+});
+
+document.getElementById('resetOverrides').addEventListener('click', () => {
+  document.getElementById('calcTransportEurOverride').value = '';
+  document.getElementById('calcDutiesEurOverride').value = '';
+  recalc();
+});
+
+function getMargin() {
+  const country = document.getElementById('calcCountry').value;
+  const map = { UK: 'rateUK', US: 'rateUS', Switzerland: 'rateSwitzerland', Norway: 'rateNorway' };
+  return (parseFloat(document.getElementById(map[country]).value) || 0) / 100;
+}
+
+function getFx() {
+  const override = parseFloat(document.getElementById('calcFxOverride').value);
+  if (override > 0) return override;
+  const eur = parseFloat(document.getElementById('calcEurPaid').value) || 0;
+  const local = parseFloat(document.getElementById('calcOrderTotal').value) || 0;
+  if (local > 0 && eur > 0) return local / eur;
+  return 0;
+}
+
+// Single source of truth for DDP calculations.
+// Returns { ok, fx, transportEur, dutiesEur, productLines: [{combo, qty, unitEur, subtotalEur}],
+//   productSum, total, matches, message?, scaled?, transportOverridden, dutiesOverridden }
+function computeDDP() {
+  const eurPaid = parseFloat(document.getElementById('calcEurPaid').value) || 0;
+  const disc = (parseFloat(document.getElementById('calcDiscount').value) || 0) / 100;
+  const margin = getMargin();
+  const fx = getFx();
+  const transportLocal = parseFloat(document.getElementById('calcTransport').value) || 0;
+  const transportOverride = parseFloat(document.getElementById('calcTransportEurOverride').value);
+  const dutiesOverride = parseFloat(document.getElementById('calcDutiesEurOverride').value);
+
+  if (fx <= 0 || eurPaid <= 0) {
+    return { ok: false, message: 'Enter order total local + EUR paid to compute' };
+  }
+
+  // Transport: override or auto
+  const transportOverridden = !isNaN(transportOverride) && transportOverride >= 0;
+  const transportEur = transportOverridden
+    ? +transportOverride.toFixed(2)
+    : +(transportLocal / fx).toFixed(2);
+
+  // Compute "natural" product unit prices (discount baked in)
+  // Natural unit = (local / fx) / (1 + margin) × (1 - disc)
+  const naturalLines = productLines
+    .filter(p => p.price > 0 && p.qty > 0)
+    .map(p => {
+      const eurGross = p.price / fx;
+      const eurNetPreDisc = eurGross / (1 + margin);
+      const naturalUnit = +(eurNetPreDisc * (1 - disc)).toFixed(2);
+      return { combo: p.combo || '(unnamed)', qty: p.qty, naturalUnit, naturalSubtotal: +(naturalUnit * p.qty).toFixed(2) };
+    });
+
+  const naturalSum = naturalLines.reduce((s, l) => s + l.naturalSubtotal, 0);
+
+  // Duties: override or residual
+  const dutiesOverridden = !isNaN(dutiesOverride) && dutiesOverride >= 0;
+  let dutiesEur, productSum, scaled, scaleFactor;
+
+  if (dutiesOverridden) {
+    // User fixed duties. Products must scale to absorb.
+    dutiesEur = +dutiesOverride.toFixed(2);
+    const targetProductSum = +(eurPaid - transportEur - dutiesEur).toFixed(2);
+    if (naturalSum > 0) {
+      scaleFactor = targetProductSum / naturalSum;
+      scaled = Math.abs(scaleFactor - 1) > 0.0001;
+    } else {
+      scaleFactor = 1;
+      scaled = false;
+    }
+    productSum = targetProductSum;
+  } else {
+    // Duties is residual. Products keep natural values.
+    scaleFactor = 1;
+    scaled = false;
+    productSum = naturalSum;
+    dutiesEur = +(eurPaid - productSum - transportEur).toFixed(2);
+  }
+
+  // Apply scale factor to each line, then absorb rounding into the last line
+  const finalLines = naturalLines.map(l => {
+    const unitEur = +(l.naturalUnit * scaleFactor).toFixed(2);
+    return { combo: l.combo, qty: l.qty, unitEur, subtotalEur: +(unitEur * l.qty).toFixed(2) };
+  });
+
+  // Re-sum finalLines and adjust last line for rounding so productSum is exact
+  if (finalLines.length > 0 && dutiesOverridden) {
+    const summed = finalLines.reduce((s, l) => s + l.subtotalEur, 0);
+    const diff = +(productSum - summed).toFixed(2);
+    if (Math.abs(diff) > 0.001) {
+      const last = finalLines[finalLines.length - 1];
+      last.subtotalEur = +(last.subtotalEur + diff).toFixed(2);
+      last.unitEur = +(last.subtotalEur / last.qty).toFixed(2);
+    }
+  }
+
+  const actualProductSum = finalLines.reduce((s, l) => s + l.subtotalEur, 0);
+  const total = +(actualProductSum + transportEur + dutiesEur).toFixed(2);
+  const matches = Math.abs(total - eurPaid) <= 0.01;
+
+  return {
+    ok: true,
+    fx, eurPaid, disc, margin,
+    transportLocal, transportEur, transportOverridden,
+    dutiesEur, dutiesOverridden,
+    productLines: finalLines,
+    productSum: actualProductSum,
+    naturalSum,
+    scaled, scaleFactor,
+    total, matches
+  };
+}
+
+function recalc() {
+  const country = document.getElementById('calcCountry').value;
+  const currency = document.getElementById('calcCurrency').value;
+  calcTableBody.innerHTML = '';
+
+  const r = computeDDP();
+  if (!r.ok) {
+    calcTableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted);font-style:italic">${r.message}</td></tr>`;
+    return;
+  }
+
+  r.productLines.forEach(l => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${l.combo}</td><td>${l.qty}</td><td>€${l.unitEur.toFixed(2)}</td><td>€${l.subtotalEur.toFixed(2)}</td>`;
+    calcTableBody.appendChild(tr);
+  });
+
+  const trTransport = document.createElement('tr');
+  trTransport.innerHTML = `<td>[CNSM-030] Transport${r.transportOverridden ? ' (override)' : ''}</td><td>1</td><td>€${r.transportEur.toFixed(2)}</td><td>€${r.transportEur.toFixed(2)}</td>`;
+  calcTableBody.appendChild(trTransport);
+
+  const trDuties = document.createElement('tr');
+  trDuties.innerHTML = `<td>[CNSM-031] Export charges, duties &amp; taxes${r.dutiesOverridden ? ' (override)' : ''}</td><td>1</td><td>€${r.dutiesEur.toFixed(2)}</td><td>€${r.dutiesEur.toFixed(2)}</td>`;
+  calcTableBody.appendChild(trDuties);
+
+  const trTotal = document.createElement('tr');
+  trTotal.className = 'total ' + (r.matches ? 'match' : 'mismatch');
+  trTotal.innerHTML = `<td>TOTAL${r.matches ? ' ✓' : ' ✗ MISMATCH'}</td><td></td><td></td><td>€${r.total.toFixed(2)}</td>`;
+  calcTableBody.appendChild(trTotal);
+
+  const noteParts = [`FX: 1 EUR = ${r.fx.toFixed(6)} ${currency}`, `margin ${(r.margin*100).toFixed(1)}%`, country];
+  if (r.disc > 0) noteParts.push(`discount ${(r.disc*100).toFixed(1)}% baked into unit price`);
+  if (r.scaled) noteParts.push(`products scaled by ${r.scaleFactor.toFixed(4)} to absorb override`);
+  const trFx = document.createElement('tr');
+  trFx.innerHTML = `<td colspan="4" style="font-style:italic;color:var(--muted);font-size:11px;text-align:left">${noteParts.join(' · ')}</td>`;
+  calcTableBody.appendChild(trFx);
+}
+
+function buildBlockFromCalc() {
+  const country = document.getElementById('calcCountry').value;
+  const fullCountry = { UK: 'United Kingdom', US: 'United States', Switzerland: 'Switzerland', Norway: 'Norway' }[country];
+  const currency = document.getElementById('calcCurrency').value;
+  const orderLocal = parseFloat(document.getElementById('calcOrderTotal').value) || 0;
+
+  const r = computeDDP();
+  if (!r.ok) return { error: r.message };
+
+  const lines = r.productLines.map(l => `  ${l.combo}   ×${l.qty}   @ €${l.unitEur.toFixed(2)}`);
+  // Transport line ALWAYS present, even at 0
+  lines.push(`  [CNSM-030]   Transport   ×1   @ €${r.transportEur.toFixed(2)}`);
+  lines.push(`  [CNSM-031]   Export charges, duties & taxes   ×1   @ €${r.dutiesEur.toFixed(2)}`);
+
+  const flags = (extractedOrderMeta?.flags || []).slice();
+  if (!r.matches) flags.push(`⚠ Verification mismatch: total €${r.total.toFixed(2)} vs eur_paid €${r.eurPaid.toFixed(2)}`);
+  if (extractedOrderMeta?.shipping_differs) flags.push('⚠ Shipping address differs from billing (main contact = billing, child Delivery = shipping)');
+
+  const c = extractedCustomer || {};
+  const orderNum = extractedOrderMeta?.order_number || '<order#>';
+  const fullName = (c.first || c.last) ? `${c.first || ''} ${c.last || ''}`.trim() : '<Customer Name>';
+
+  let billingBlock = '';
+  if (extractedOrderMeta?.shipping_differs && extractedOrderMeta.shipping_address) {
+    const b = extractedOrderMeta.shipping_address;
+    billingBlock = `\nSHIPPING_DIFFERS
+  Street     ${b.street1 || ''}
+${b.street2 ? `  Street 2   ${b.street2}\n` : ''}  City       ${b.city || ''}
+  ZIP        ${b.zip || ''}
+  Country    ${b.country || ''}\n`;
+  }
+
+  const street2 = c.street2 ? `  Street 2   ${c.street2}\n` : '';
+
+  const showWorkLines = r.productLines.map(l =>
+    `    ${l.combo}: ×${l.qty} @ €${l.unitEur.toFixed(2)} = €${l.subtotalEur.toFixed(2)}`
+  );
+
+  const discNote = r.disc > 0
+    ? `  Discount ${(r.disc*100).toFixed(2)}% baked into unit price (not shown in Disc column)`
+    : `  Discount: none`;
+
+  const transportNote = r.transportOverridden
+    ? `  Transport (manual override): €${r.transportEur.toFixed(2)}`
+    : `  Transport: ${r.transportLocal.toFixed(2)} / ${r.fx.toFixed(6)} = €${r.transportEur.toFixed(2)}`;
+
+  const dutiesNote = r.dutiesOverridden
+    ? `  Duties (manual override): €${r.dutiesEur.toFixed(2)}\n  Products scaled by ${r.scaleFactor.toFixed(4)} to keep total = eur_paid`
+    : `  Duties (residual): €${r.eurPaid.toFixed(2)} − €${r.productSum.toFixed(2)} − €${r.transportEur.toFixed(2)} = €${r.dutiesEur.toFixed(2)}`;
+
+  const block = `═══════════════════════════════════════════════════════════
+ORDER ${orderNum}  ·  ${fullName}  ·  €${r.eurPaid.toFixed(2)}  [DDP ${country}]
+═══════════════════════════════════════════════════════════
+${flags.length ? '\nFLAGS\n' + flags.map(f => '  ' + f).join('\n') + '\n' : ''}
+CUSTOMER
+  Email      ${c.email || '<email>'}
+  First      ${c.first || '<first>'}
+  Last       ${c.last || '<last>'}
+  Street     ${c.street1 || '<address>'}
+${street2}  City       ${c.city || '<city>'}
+  ZIP        ${c.zip || '<zip>'}
+  Country    ${c.country || fullCountry}
+  Phone      ${c.phone || '<phone>'}
+  Segment        B2C
+  Contact type   B2C
+${billingBlock}
+QUOTE
+  Customer Ref     Shopify ${orderNum}
+  Pricelist        Standard RRP (EUR)
+  Fiscal Position  Export/Import
+  Incoterms        DDP
+  Payment Terms    Shopify
+
+LINES
+${lines.join('\n')}
+
+CALCULATION SHOW-WORK
+  Customer paid:              ${orderLocal.toFixed(2)} ${currency}
+  Shopify EUR amount:         €${r.eurPaid.toFixed(2)}   (FX 1 EUR = ${r.fx.toFixed(6)} ${currency})
+  Country margin (${fullCountry}): ${(r.margin*100).toFixed(1)}%
+${discNote}
+
+  Product lines (discount and scaling baked into unit price):
+${showWorkLines.join('\n')}
+  Sum: €${r.productSum.toFixed(2)}
+
+${transportNote}
+
+${dutiesNote}
+
+  Verification:
+    €${r.productSum.toFixed(2)} + €${r.transportEur.toFixed(2)} + €${r.dutiesEur.toFixed(2)} = €${r.total.toFixed(2)}  ${r.matches ? '✓' : '✗'}`;
+
+  return { block };
+}
+
+// ---------- customer state (populated by extractor, used when building blocks) ----------
+let extractedCustomer = null;
+let extractedOrderMeta = null;  // { order_number, flags, shipping_differs, shipping_address }
+let extractedOrders = []; // array of orders from extractor (for checklist rendering)
+
+function buildEUBlock(order) {
+  const c = order.customer || {};
+  const eu = order.eu || {};
+  const flags = order.flags || [];
+  if (order.shipping_differs) flags.push('⚠ Shipping address differs from billing (main contact = billing, child Delivery = shipping)');
+
+  const lines = (eu.lines || []).map(l => {
+    const disc = l.discount_pct > 0 ? `   [Disc ${l.discount_pct}%]` : '';
+    return `  ${l.sku || '<MISSING SKU>'}   ${l.name || ''}   ×${l.qty}   @ €${(+l.price_eur).toFixed(2)}${disc}`;
+  });
+  // Transport line ALWAYS present for EU too, even at 0
+  const transportEur = +(eu.transport_eur || 0);
+  lines.push(`  [CNSM-030]   Transport   ×1   @ €${transportEur.toFixed(2)}`);
+
+  const street2 = c.street2 ? `  Street 2   ${c.street2}\n` : '';
+  let billingBlock = '';
+  if (order.shipping_differs && order.shipping_address) {
+    const b = order.shipping_address;
+    billingBlock = `\nSHIPPING_DIFFERS
+  Street     ${b.street1 || ''}
+${b.street2 ? `  Street 2   ${b.street2}\n` : ''}  City       ${b.city || ''}
+  ZIP        ${b.zip || ''}
+  Country    ${b.country || ''}\n`;
+  }
+
+  return `═══════════════════════════════════════════════════════════
+ORDER ${order.order_number || '<n>'}  ·  ${c.first || ''} ${c.last || ''}  ·  €${(+eu.total_eur).toFixed(2)}
+═══════════════════════════════════════════════════════════
+${flags.length ? '\nFLAGS\n' + flags.map(f => '  ' + f).join('\n') + '\n' : ''}
+CUSTOMER
+  Email      ${c.email || ''}
+  First      ${c.first || ''}
+  Last       ${c.last || ''}
+  Street     ${c.street1 || ''}
+${street2}  City       ${c.city || ''}
+  ZIP        ${c.zip || ''}
+  Country    ${c.country || ''}
+  Phone      ${c.phone || ''}
+  Segment        B2C
+  Contact type   B2C
+${billingBlock}
+QUOTE
+  Customer Ref     Shopify ${order.order_number || '<n>'}
+  Pricelist        Standard RRP (EUR)
+  Fiscal Position  <Odoo default for EU>
+  Payment Terms    Shopify
+
+LINES
+${lines.join('\n')}
+
+TOTALS CHECK
+  Shopify total:    €${(+eu.total_eur).toFixed(2)}     (Odoo total must match within €0.50)`;
+}
+
+function populateCalcFromDDP(order) {
+  const d = order.ddp || {};
+  document.getElementById('calcCountry').value = d.country || 'UK';
+  document.getElementById('calcCurrency').value = d.currency || 'GBP';
+  // trigger currency change visuals
+  document.getElementById('calcCurrency').dispatchEvent(new Event('change'));
+  document.getElementById('calcCountry').value = d.country || 'UK';
+
+  document.getElementById('calcOrderTotal').value = d.order_total_local ?? '';
+  document.getElementById('calcEurPaid').value = d.eur_paid ?? '';
+  document.getElementById('calcDiscount').value = d.discount_pct ?? 0;
+  document.getElementById('calcTransport').value = d.transport_local ?? 0;
+  document.getElementById('calcFxOverride').value = d.fx_rate ?? '';
+
+  productLines = (d.lines && d.lines.length)
+    ? d.lines.map(l => ({
+        combo: `[${l.sku || '?'}] ${l.name || ''}`.trim(),
+        qty: l.qty || 1,
+        price: l.price_local || 0
+      }))
+    : [{ combo: '', qty: 1, price: 0 }];
+  renderProductLines();
+  recalc();
+
+  // remember customer + order meta so the block we build later includes them
+  extractedCustomer = order.customer;
+  extractedOrderMeta = {
+    order_number: order.order_number,
+    flags: order.flags || [],
+    shipping_differs: order.shipping_differs,
+    shipping_address: order.shipping_address
+  };
+}
+const copyBtn = document.getElementById('copyBtn');
+const downloadBtn = document.getElementById('downloadBtn');
+const outputEl = document.getElementById('output');
+const statusEl = document.getElementById('status');
+
+function setStatus(msg, cls = '') {
+  statusEl.className = 'status ' + cls;
+  statusEl.textContent = msg;
+}
+
+const checklistEl = document.getElementById('checklist');
+
+function setOutput(text, cls = '') {
+  outputEl.className = 'output ' + cls;
+  outputEl.textContent = text || 'Block appears here.';
+  if (!text) outputEl.classList.add('placeholder');
+  copyBtn.disabled = !text || cls === 'error' || cls === 'placeholder';
+  downloadBtn.disabled = copyBtn.disabled;
+}
+
+function setChecklistPlaceholder(msg, cls = 'placeholder') {
+  checklistEl.className = 'checklist ' + cls;
+  checklistEl.innerHTML = '';
+  checklistEl.textContent = msg;
+}
+
+// ---------- Output tab switching ----------
+document.querySelectorAll('[data-otab]').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('[data-otab]').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    const which = t.dataset.otab;
+    document.getElementById('otab-checklist').style.display = which === 'checklist' ? '' : 'none';
+    document.getElementById('otab-raw').style.display = which === 'raw' ? '' : 'none';
+  });
+});
+
+// ---------- Build structured checklist data from order ----------
+function buildOrderSteps(order) {
+  // order is the parsed JSON from extractor (EU or DDP), OR a synthesized one from manual calc.
+  // Returns: { headerLine, isDDP, ddpCountry, flags, customerSteps, billingSteps, soSteps, lines, totalsCheck, shippingDiffers, shippingAddress }
+  const c = order.customer || {};
+  const isDDP = order.type === 'DDP';
+  const ddpCountry = isDDP ? (order.ddp?.country || '') : '';
+  const totalEur = isDDP ? (order.ddp?.eur_paid || 0) : (order.eu?.total_eur || 0);
+  const fullName = `${c.first || ''} ${c.last || ''}`.trim() || '<unnamed>';
+  const orderNum = order.order_number || '<n>';
+
+  const flags = (order.flags || []).slice();
+  if (order.shipping_differs) flags.push('Shipping address differs from billing — child Delivery contact required');
+
+  const customerSteps = [
+    { label: 'Email', value: c.email || '' },
+    { label: 'First Name', value: c.first || '' },
+    { label: 'Last Name', value: c.last || '' },
+    { label: 'Segment', value: 'B2C', static: true },
+    { label: 'Contact type', value: 'B2C', static: true },
+    { label: 'Street', value: c.street1 || '' },
+  ];
+  if (c.street2) customerSteps.push({ label: 'Street 2', value: c.street2 });
+  customerSteps.push(
+    { label: 'City', value: c.city || '' },
+    { label: 'ZIP', value: c.zip || '' },
+    { label: 'Country', value: c.country || '' },
+    { label: 'Phone', value: c.phone || '' },
+    { label: 'Sales Person', value: 'Michaela Piehl', static: true },
+    { label: 'Payment Terms', value: 'Shopify', static: true },
+    { label: 'Pricelist', value: 'Standard RRP (EUR)', static: true },
+  );
+
+  const billingSteps = [];
+  if (order.shipping_differs && order.shipping_address) {
+    const s = order.shipping_address;
+    billingSteps.push(
+      { label: 'Type', value: 'Delivery', static: true },
+      { label: 'Street', value: s.street1 || '' },
+    );
+    if (s.street2) billingSteps.push({ label: 'Street 2', value: s.street2 });
+    billingSteps.push(
+      { label: 'City', value: s.city || '' },
+      { label: 'ZIP', value: s.zip || '' },
+      { label: 'Country', value: s.country || '' },
+    );
+  }
+
+  const soSteps = [
+    { label: 'Customer', value: fullName, hint: 'pick the contact you just saved' },
+    { label: 'Customer Reference', value: `Shopify ${orderNum}` },
+    { label: 'Incoterms', value: isDDP ? 'DDP' : 'DAP', static: true },
+    { label: 'Pricelist', value: 'Standard RRP (EUR)', static: true, hint: 'verify auto-pulled from contact' },
+    { label: 'Fiscal Position', value: isDDP ? 'Export/Import' : '(Odoo default)', static: true },
+    { label: 'Sales Person', value: 'Michaela Piehl', static: true, hint: 'verify auto-pulled' },
+    { label: 'Payment Terms', value: 'Shopify', static: true, hint: 'verify auto-pulled' },
+  ];
+
+  // Lines
+  let lines = [];
+  if (isDDP) {
+    const productLines = order.ddp?.computedLines || [];
+    productLines.forEach(l => {
+      lines.push({ sku: extractSKU(l.combo), name: extractName(l.combo), qty: l.qty, unit: l.unitEur, disc: 0 });
+    });
+    lines.push({ sku: 'CNSM-030', name: 'Transport', qty: 1, unit: order.ddp?.transportEur || 0, disc: 0, mandatory: true });
+    lines.push({ sku: 'CNSM-031', name: 'Export charges, duties & taxes', qty: 1, unit: order.ddp?.dutiesEur || 0, disc: 0, mandatory: true });
+  } else {
+    (order.eu?.lines || []).forEach(l => {
+      lines.push({ sku: l.sku || '', name: l.name || '', qty: l.qty, unit: +l.price_eur, disc: l.discount_pct || 0 });
+    });
+    lines.push({ sku: 'CNSM-030', name: 'Transport', qty: 1, unit: +(order.eu?.transport_eur || 0), disc: 0, mandatory: true });
+  }
+
+  return {
+    orderNum, fullName, totalEur, isDDP, ddpCountry,
+    flags, customerSteps, billingSteps, soSteps, lines,
+    shippingDiffers: !!order.shipping_differs,
+  };
+}
+
+function extractSKU(combo) {
+  if (!combo) return '';
+  const m = combo.match(/^\[?([^\]\s]+)\]?\s*(.*)/);
+  return m ? m[1].replace(/[\[\]]/g, '') : combo;
+}
+function extractName(combo) {
+  if (!combo) return '';
+  const m = combo.match(/^\[?[^\]]+\]?\s*(.*)/);
+  return m ? m[1].trim() : '';
+}
+
+// ---------- Render checklist ----------
+function renderChecklist(orders) {
+  if (!orders || orders.length === 0) {
+    setChecklistPlaceholder('No orders to display.');
+    return;
+  }
+  checklistEl.className = 'checklist';
+  checklistEl.innerHTML = '';
+
+  orders.forEach((order, idx) => {
+    if (order.type === 'SKIP') {
+      const div = document.createElement('div');
+      div.style.padding = '20px';
+      div.style.background = '#fff5f0';
+      div.style.borderLeft = '3px solid var(--warn)';
+      div.style.marginBottom = '16px';
+      div.innerHTML = `<strong>Order ${order.order_number || ''} — SKIPPED</strong><br>${order.skip_reason || 'Country not in rate table'}<br>Customer: ${(order.customer?.first || '')} ${(order.customer?.last || '')} (${order.customer?.country || '?'})`;
+      checklistEl.appendChild(div);
+      return;
+    }
+
+    const data = buildOrderSteps(order);
+    const orderDiv = document.createElement('div');
+    orderDiv.className = 'order-checklist';
+    orderDiv.dataset.orderIdx = idx;
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'order-header';
+    header.innerHTML = `<strong>Order ${data.orderNum}</strong> · ${data.fullName} · €${data.totalEur.toFixed(2)}${data.isDDP ? `<span class="ddp-tag">DDP ${data.ddpCountry}</span>` : ''}`;
+    orderDiv.appendChild(header);
+
+    // Progress
+    const progressDiv = document.createElement('div');
+    progressDiv.className = 'progress';
+    progressDiv.innerHTML = `<span class="progress-text">0 / ? steps complete</span><div class="progress-bar"><div class="fill" style="width:0%"></div></div>`;
+    orderDiv.appendChild(progressDiv);
+
+    // Flags
+    if (data.flags.length) {
+      const flagsDiv = document.createElement('div');
+      flagsDiv.className = 'flags';
+      flagsDiv.innerHTML = '<strong>Flags:</strong><br>' + data.flags.map(f => '· ' + f).join('<br>');
+      orderDiv.appendChild(flagsDiv);
+    }
+
+    // Phase 1: Contact card
+    orderDiv.appendChild(renderPhase('Phase 1 — Contact card (search by email first; create if not found)', data.customerSteps));
+
+    // Phase 1b: Billing/Delivery child
+    if (data.billingSteps.length) {
+      orderDiv.appendChild(renderPhase('Phase 1b — Child Delivery contact (after saving main, click Add and use type Delivery)', data.billingSteps));
+    }
+
+    // Phase 2: SO header
+    orderDiv.appendChild(renderPhase('Phase 2 — Sales Order header (Quotations → Create)', data.soSteps));
+
+    // Phase 3: Lines
+    const linesPhase = document.createElement('div');
+    linesPhase.className = 'phase';
+    linesPhase.innerHTML = `<h4>Phase 3 — Add product lines (Add a product, paste SKU, set qty + unit price, leave Disc blank for DDP)</h4>`;
+    const table = document.createElement('table');
+    table.className = 'lines-table';
+    table.innerHTML = `<thead><tr><th style="width:24px"></th><th>SKU</th><th>Name</th><th class="num">Qty</th><th class="num">Unit €</th>${data.isDDP ? '' : '<th class="num">Disc %</th>'}</tr></thead><tbody></tbody>`;
+    const tbody = table.querySelector('tbody');
+    data.lines.forEach(l => {
+      const tr = document.createElement('tr');
+      const discCell = data.isDDP ? '' : `<td class="num copy-cell" data-copy="${l.disc || 0}">${l.disc || 0}</td>`;
+      tr.innerHTML = `<td><input type="checkbox" class="line-check"></td><td class="copy-cell" data-copy="${escapeHtml(l.sku)}">${escapeHtml(l.sku)}</td><td>${escapeHtml(l.name)}</td><td class="num copy-cell" data-copy="${l.qty}">${l.qty}</td><td class="num copy-cell" data-copy="${l.unit.toFixed(2)}">${l.unit.toFixed(2)}</td>${discCell}`;
+      if (l.mandatory) tr.title = 'Mandatory line — order cannot be confirmed without it';
+      tbody.appendChild(tr);
+    });
+    linesPhase.appendChild(table);
+
+    // Total check
+    const totalCheck = document.createElement('div');
+    totalCheck.className = 'total-check';
+    const sumLines = data.lines.reduce((s, l) => {
+      const lineTotal = l.unit * l.qty * (1 - (l.disc || 0) / 100);
+      return s + lineTotal;
+    }, 0);
+    const matches = Math.abs(sumLines - data.totalEur) <= (data.isDDP ? 0.01 : 0.50);
+    totalCheck.className = 'total-check' + (matches ? '' : ' mismatch');
+    totalCheck.innerHTML = `<strong>Verify SO total in Odoo:</strong> €${data.totalEur.toFixed(2)} ${matches ? '✓' : '✗ MISMATCH (calculated €' + sumLines.toFixed(2) + ')'}`;
+    linesPhase.appendChild(totalCheck);
+
+    orderDiv.appendChild(linesPhase);
+
+    // Stop instruction
+    const stop = document.createElement('div');
+    stop.style.cssText = 'margin-top:12px;padding:10px;background:var(--paper);border:1px solid var(--rule);font-size:12px';
+    stop.innerHTML = `<strong>Stop here:</strong> click Save (quote stays in Draft). Do NOT click Confirm or Validate.`;
+    orderDiv.appendChild(stop);
+
+    if (idx < orders.length - 1) {
+      const sep = document.createElement('hr');
+      sep.style.cssText = 'margin:24px 0;border:none;border-top:2px solid var(--ink)';
+      orderDiv.appendChild(sep);
+    }
+
+    checklistEl.appendChild(orderDiv);
+    updateProgress(orderDiv);
+  });
+
+  // Wire up all copy actions and checkboxes
+  checklistEl.querySelectorAll('.copy-cell, .step-value:not(.empty)').forEach(el => {
+    el.addEventListener('click', async () => {
+      const value = el.dataset.copy || el.textContent.trim();
+      if (!value) return;
+      try {
+        await navigator.clipboard.writeText(value);
+        el.classList.add('copied');
+        setTimeout(() => el.classList.remove('copied'), 1000);
+      } catch (e) {
+        // ignore
+      }
+    });
+  });
+
+  checklistEl.querySelectorAll('input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', e => {
+      const row = e.target.closest('.step') || e.target.closest('tr');
+      if (row) row.classList.toggle('done', e.target.checked);
+      const orderDiv = e.target.closest('.order-checklist');
+      if (orderDiv) updateProgress(orderDiv);
+    });
+  });
+}
+
+function renderPhase(title, steps) {
+  const phase = document.createElement('div');
+  phase.className = 'phase';
+  const h = document.createElement('h4');
+  h.textContent = title;
+  phase.appendChild(h);
+  steps.forEach(s => {
+    const row = document.createElement('div');
+    row.className = 'step';
+    const valueEl = s.value
+      ? `<div class="step-value" data-copy="${escapeHtml(s.value)}" title="Click to copy">${escapeHtml(s.value)}</div>`
+      : `<div class="step-value empty">— blank —</div>`;
+    const hint = s.hint ? `<div style="font-size:10px;color:var(--muted);margin-top:2px">${escapeHtml(s.hint)}</div>` : '';
+    row.innerHTML = `<input type="checkbox"><div class="step-label">${escapeHtml(s.label)}</div><div>${valueEl}${hint}</div><div></div>`;
+    phase.appendChild(row);
+  });
+  return phase;
+}
+
+function updateProgress(orderDiv) {
+  const checks = orderDiv.querySelectorAll('input[type=checkbox]');
+  const total = checks.length;
+  const done = Array.from(checks).filter(c => c.checked).length;
+  const text = orderDiv.querySelector('.progress-text');
+  const fill = orderDiv.querySelector('.progress-bar .fill');
+  if (text) text.textContent = `${done} / ${total} steps complete`;
+  if (fill) fill.style.width = total > 0 ? `${(done/total)*100}%` : '0%';
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+// Build a synthetic "order" object from the manual calc state for checklist rendering
+function buildOrderFromCalc() {
+  const r = computeDDP();
+  if (!r.ok) return null;
+  const country = document.getElementById('calcCountry').value;
+  const currency = document.getElementById('calcCurrency').value;
+  const c = extractedCustomer || {};
+
+  return {
+    type: 'DDP',
+    order_number: extractedOrderMeta?.order_number || '',
+    flags: extractedOrderMeta?.flags || [],
+    shipping_differs: !!extractedOrderMeta?.shipping_differs,
+    shipping_address: extractedOrderMeta?.shipping_address || null,
+    customer: c,
+    ddp: {
+      country,
+      currency,
+      eur_paid: r.eurPaid,
+      transportEur: r.transportEur,
+      dutiesEur: r.dutiesEur,
+      computedLines: r.productLines  // [{combo, qty, unitEur, subtotalEur}]
+    }
+  };
+}
+
+generateBtn.addEventListener('click', async () => {
+  if (state.mode === 'calc') {
+    const result = buildBlockFromCalc();
+    if (result.error) { setStatus(result.error, 'err'); return; }
+    setOutput(result.block);
+    // Build & render checklist from calc state
+    const ord = buildOrderFromCalc();
+    if (ord) renderChecklist([ord]);
+    setStatus('Checklist ready. Tick off each step as you enter into Odoo.', 'done');
+    return;
+  }
+
+  const key = apiKeyEl.value.trim();
+  if (!key) { setStatus('Add your API key first.', 'err'); return; }
+  if (state.mode === 'screenshots' && state.files.length === 0) {
+    setStatus('Add at least one screenshot.', 'err'); return;
+  }
+  if (state.mode === 'csv' && !state.csv.trim()) {
+    setStatus('Paste CSV or order text first.', 'err'); return;
+  }
+
+  generateBtn.disabled = true;
+  setStatus('Reading order...', 'working');
+  setOutput('', 'placeholder');
+
+  try {
+    const content = [];
+    if (state.mode === 'screenshots') {
+      for (const f of state.files) {
+        const base64 = f.dataUrl.split(',')[1];
+        content.push({ type: 'image', source: { type: 'base64', media_type: f.mediaType, data: base64 } });
+      }
+      content.push({ type: 'text', text: 'Extract the order(s) from the screenshot(s) above. Return the JSON object as specified.' });
+    } else {
+      content.push({ type: 'text', text: 'Extract the order(s) from the Shopify CSV / text below. Return the JSON object as specified.\n\n' + state.csv });
+    }
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-5',
+        max_tokens: 4000,
+        system: EXTRACTOR_PROMPT,
+        messages: [{ role: 'user', content }]
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`API ${res.status}: ${err}`);
+    }
+
+    const data = await res.json();
+    let text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
+    if (!text) throw new Error('Empty response from Claude.');
+
+    // Strip code fences if present
+    text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
+
+    let parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch (e) {
+      throw new Error('Could not parse JSON. Raw response:\n\n' + text);
+    }
+
+    const orders = parsed.orders || [];
+    if (orders.length === 0) throw new Error('No orders found in the input.');
+    extractedOrders = orders;
+
+    // Route based on order types
+    const blocks = [];
+    let needsCalc = false;
+
+    for (const order of orders) {
+      if (order.type === 'SKIP') {
+        blocks.push(`═══════════════════════════════════════════════════════════
+ORDER ${order.order_number || '<n>'}  ·  SKIPPED
+═══════════════════════════════════════════════════════════
+
+⚠ ${order.skip_reason || 'Country not in rate table'}
+Customer: ${order.customer?.first || ''} ${order.customer?.last || ''} (${order.customer?.country || '?'})
+Do not process this order.`);
+      } else if (order.type === 'EU') {
+        blocks.push(buildEUBlock(order));
+      } else if (order.type === 'DDP') {
+        // Populate the calculator and switch to that tab
+        populateCalcFromDDP(order);
+        needsCalc = true;
+      }
+    }
+
+    if (needsCalc) {
+      // Switch to calc tab so user can review/edit
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      const calcTab = document.querySelector('.tab[data-tab="calc"]');
+      calcTab.classList.add('active');
+      state.mode = 'calc';
+      document.getElementById('tab-screenshots').style.display = 'none';
+      document.getElementById('tab-csv').style.display = 'none';
+      document.getElementById('tab-calc').style.display = '';
+
+      // Build a preview block from the calculator so they can see the output
+      const calcResult = buildBlockFromCalc();
+      const previewBlock = calcResult.block || calcResult.error || '';
+      const allBlocks = blocks.concat(previewBlock).filter(Boolean).join('\n\n\n');
+      setOutput(allBlocks);
+
+      // Build checklist using EU-style orders + the synthetic DDP from calc
+      const checklistOrders = [];
+      for (const o of orders) {
+        if (o.type === 'DDP') {
+          const synth = buildOrderFromCalc();
+          if (synth) checklistOrders.push(synth);
+        } else {
+          checklistOrders.push(o);
+        }
+      }
+      renderChecklist(checklistOrders);
+
+      setStatus('DDP order extracted. Review the calculator, edit if needed, then click Generate again. Checklist on the right.', 'done');
+    } else {
+      setOutput(blocks.join('\n\n\n'));
+      renderChecklist(orders);
+      setStatus('Done. Use the checklist to enter into Odoo.', 'done');
+    }
+  } catch (e) {
+    setOutput('Error: ' + e.message, 'error');
+    setStatus('Failed.', 'err');
+  } finally {
+    generateBtn.disabled = false;
+  }
+});
+
+document.getElementById('clearBtn').addEventListener('click', () => {
+  state.files = [];
+  state.csv = '';
+  document.getElementById('csvInput').value = '';
+  renderFiles();
+  setOutput('', 'placeholder');
+  setChecklistPlaceholder('Fill in customer details on the left, then hit Generate. The step-by-step checklist appears here.');
+  setStatus('');
+  extractedCustomer = null;
+  extractedOrderMeta = null;
+  extractedOrders = [];
+});
+
+const PLUGIN_INSTRUCTIONS = `# Eldvarm — Shopify Order → Odoo Draft Quote (Claude in Chrome) — v3
+
+## What you're doing
+
+I will paste a pre-formatted order block. You will:
+1. Read every field from the block. Do not look anywhere else for data.
+2. For non-EU orders, do the DDP calculation in your head BEFORE clicking.
+3. Drive Chrome to create the contact and the draft quote in Odoo.
+4. Stop at draft. Do NOT click Confirm. Do NOT click Validate.
+
+Odoo URL: https://eldvarm.teamdsi.eu
+
+## The input format
+
+The block looks like this. Treat every line as authoritative.
+
+\`\`\`
+═══════════════════════════════════════════════════════════
+ORDER #<n>  ·  <name>  ·  €<total>
+═══════════════════════════════════════════════════════════
+CUSTOMER
+  Email      <email>
+  First      <first name>
+  Last       <last name>
+  Street     <street>
+  Street 2   <street 2, may be missing>
+  City       <city>
+  ZIP        <zip>
+  Country    <country>
+  Phone      <phone>
+  Segment        B2C
+  Contact type   B2C
+QUOTE
+  Customer Ref     Shopify #<n>
+  Pricelist        Standard RRP (EUR)
+  Fiscal Position  <left at Odoo default for EU>
+  Payment Terms    Shopify
+LINES
+  <SKU>   <name>   ×<qty>   @ €<price>   [Disc <X>%]
+  <more product lines if any>
+  [CNSM-030]   Transport   ×1   @ €<transport>   (always present, even at €0.00)
+TOTALS CHECK
+  Shopify total:    €<total>     (Odoo total must match within €0.50)
+\`\`\`
+
+For non-EU orders, the block also contains:
+- A [DDP <COUNTRY>] tag in the order header
+- An eur_paid and FX rate line
+- Transport and "Export charges, duties & taxes" lines already calculated
+- A CALCULATION SHOW-WORK section you can use to verify the math
+
+If the email appears as a markdown link like [x@y.com](mailto:x@y.com), strip the markdown and use just x@y.com.
+
+## Phase 1 — Confirm before clicking
+
+Print back what you've understood, in this format:
+
+\`\`\`
+Reading: ORDER #<n>, <name>, <country>, <EU | DDP <country>>
+Lines to enter:
+  <SKU> <name> ×<qty> @ €<price> [Disc <X>%]
+  ...
+Contact card defaults will be set: Sales Person Michaela Piehl, Payment Terms Shopify, Pricelist Standard RRP (EUR), Segment B2C, Contact type B2C
+Incoterms on SO: DAP (EU) | DDP (non-EU)
+Shipping address differs from billing: yes (add as child Delivery card) | no (skip, do not mention again)
+\`\`\`
+
+For DDP orders, also re-state the verification: sum of lines = eur_paid ✓ / ✗.
+
+If anything is missing or doesn't look right, STOP and ask me.
+
+Wait for me to say "go" before driving the browser.
+
+## Odoo field type lookup (read BEFORE clicking anything)
+
+This table tells you the type of each field and the right interaction method. Skip DOM inspection, go straight to the right approach.
+
+### Contact card
+
+| Field | Type | How to set | Notes |
+|---|---|---|---|
+| Individual / Company toggle | radio | Click | Set to Individual first |
+| Segment | dropdown at top of form | Click + select | Set to B2C FIRST, before name fields. This restructures the form to split Name into First/Last. |
+| Contact type | dropdown in right column (below Tags) | Click + select | Set to B2C. SEPARATE from Segment, both must be set. |
+| Name (single field, before B2C) | text input | Type | Only present before Segment is set |
+| First Name | text input | **JavaScript** | Query \`input[name="firstname"]\` and set value + dispatch input/change events. Coordinate clicks miss because the form has just shifted. |
+| Last Name | text input | **JavaScript** | Query \`input[name="lastname"]\`, same pattern |
+| Street, Street 2, City, ZIP | text inputs | Type or JS | Standard text inputs |
+| Country | many2one autocomplete | Type + pick | Real autocomplete, type and select |
+| Phone | text input | Type | Standard |
+| Email | text input | Type | Strip markdown link formatting first |
+| Sales Person | many2one autocomplete | Type + pick | Type "Michaela", select Michaela Piehl |
+| Payment Terms | many2one autocomplete | Type + pick | Type "Shopify", select |
+| Pricelist | many2one autocomplete | Type + pick | Type "Standard", select Standard RRP (EUR) |
+
+### Sales Order header
+
+| Field | Type | How to set | Notes |
+|---|---|---|---|
+| Customer | many2one autocomplete | Type + pick | Type email or name, pick the right contact |
+| Customer Reference | text input | Type | "Shopify <order#>" from the block |
+| Incoterms | **native select** | **JavaScript** | NOT an autocomplete. Set via \`document.querySelector('select[name="incoterm_id"]').value = <option value>; dispatch change\`. Or click the styled element, native dropdown will appear, click option. |
+| Pricelist | many2one autocomplete | Verify only | Should auto-pull from contact. Override via type + pick if wrong. |
+| Fiscal Position | many2one autocomplete | Type + pick | EU: leave default. DDP: type "Export", select Export/Import |
+| Sales Person | many2one autocomplete | Verify via JS | \`document.querySelector('[name="user_id"] input').value\` should read "Michaela Piehl". No need to switch tabs to confirm. |
+| Payment Terms | many2one autocomplete | Verify via JS | Same trick, should read "Shopify" |
+
+### SO line items
+
+| Field | Type | How to set |
+|---|---|---|
+| Product (SKU lookup) | many2one autocomplete | Type SKU, pick \`[SKU] Product Name\` |
+| Ordered Qty | number input | Type |
+| Unit Price | number input | Type (always override, never trust auto-fill) |
+| Disc (%) | number input | Type, leave blank for DDP (discount baked into price for DDP) |
+
+## ID stability note
+
+Odoo's auto-generated field IDs (e.g. \`o_field_input_1267\`) change between sessions. Always query by stable attributes: \`name\`, \`data-name\`, or label text. Do NOT cache element IDs across actions.
+
+## Speed rules (apply throughout Phases 2–5)
+
+- Use \`browser_batch\` aggressively. Chain click → type → screenshot → click → type into a single batched call wherever the next action doesn't depend on a screenshot to plan. A whole contact card can typically be filled in 2–3 batches, not 15 individual calls.
+- Before clicking a field, glance at the DOM (element type, role, classes). One inspection saves five blind retries.
+- If two consecutive coordinate clicks miss the target, stop and switch to JavaScript. Don't keep adjusting pixel offsets.
+- Don't take a screenshot after every action. Screenshots are expensive. Only take them at decision points: after navigating to a new view, after submitting a form, when you genuinely need to see UI state to decide the next action. Don't screenshot to "verify" a typed field, trust the input.
+- Verify field values via JavaScript reads, not screenshots. To check Sales Person, Payment Terms, Pricelist, etc., read \`document.querySelector('[name="<field>"] input').value\` directly. No tab-switching, no screenshots.
+
+## Phase 2 — Find or create the contact
+
+Navigate to:
+https://eldvarm.teamdsi.eu/web#action=105&model=res.partner&view_type=kanban
+
+Search by email. Then:
+- Exactly one result: click in, confirm address matches the block. Match: use this contact and skip to Phase 3. Differs: tell me first.
+- Zero results: click Create and fill the contact card per below.
+- Multiple results: STOP and ask me which one.
+
+### Contact card fields to fill
+
+Fill in this exact order. Be careful with field labels, Odoo's name fields can be confusing.
+
+1. Individual / Company toggle: Individual.
+2. Name fields: read the labels next to each field, do not go by position alone.
+   - The field labelled First Name gets the value from the block's First line.
+   - The field labelled Last Name gets the value from the block's Last line.
+   - When a customer's last name has multiple words (e.g. compound surnames, particles like "van", "de", "von"), all of those words go into the Last Name field. The block has already done this split for you, so trust First and Last as given.
+3. Segment AND Contact type: **BOTH set to B2C. MANDATORY.** These are TWO SEPARATE fields:
+   - **Segment** is a dropdown at the TOP of the contact form. Set it FIRST, before name fields, because setting it splits the Name input into First Name / Last Name.
+   - **Contact type** is a separate dropdown in the RIGHT COLUMN of the contact form, near the bottom of the visible block (below Tags, above the "Company (Woocommerce)" field).
+   - Both fields must read "B2C" before saving. If either is blank, the contact is incomplete.
+   - Ignore the "Company (Woocommerce)" field, leave it blank.
+   - If you cannot find either field after a thorough search, STOP and tell me. Saving the contact without both Segment and Contact type set to B2C is a failure of this task.
+4. Address fields (this is the **BILLING address**, which goes on the main contact card per Eldvarm convention): Street, Street 2 (skip if missing in block), City, ZIP, Country. Country: use autocomplete, exact match. The address from the CUSTOMER block at the top of the data block IS the billing address.
+5. Phone: value from Phone in the block.
+6. Email: value from Email in the block (strip any markdown link formatting first).
+7. Sales & Purchase tab (or wherever these live in the contact form):
+   - Sales Person: Michaela Piehl
+   - Payment Terms: Shopify
+   - Pricelist: Standard RRP (EUR)
+
+These three are contact-level defaults that auto-pull into every SO. Always set them on a new contact. On an existing contact, verify they're correct and flag if not.
+
+Before clicking Save, verify these fields are filled on the contact card:
+- First Name, Last Name (correctly split)
+- Segment = B2C (top dropdown)
+- Contact type = B2C (separate dropdown in right column, both must be set)
+- Email
+- Address (Street, City, ZIP, Country)
+- Sales Person = Michaela Piehl
+- Payment Terms = Shopify
+- Pricelist = Standard RRP (EUR)
+
+If any of the above is missing or wrong, fix it BEFORE clicking Save.
+
+Click Save on the contact card.
+
+Do NOT click Validate, that stays manual for me.
+
+### Address handling: shipping vs billing
+
+**Eldvarm convention, never reverse it:**
+- Main contact card → BILLING address
+- Child Delivery contact → SHIPPING address (only when different from billing)
+
+In the data block:
+- The CUSTOMER block at the top contains the BILLING address. This goes on the main contact card.
+- A SHIPPING_DIFFERS section, if present, contains the SHIPPING address. This goes on a child Delivery contact.
+
+What to do:
+- Block has NO SHIPPING_DIFFERS section: addresses are identical. The main contact card holds the address. Do NOT add a child contact. Do NOT mention it.
+- Block HAS a SHIPPING_DIFFERS section: addresses differ. Save the main contact with the BILLING address (from CUSTOMER block) FIRST, then add a child contact of type **Delivery** with the SHIPPING address (from SHIPPING_DIFFERS section). Don't click Validate on the child either.
+
+Sanity check before saving the main contact: the address you've entered should match the CUSTOMER block at the top, not the SHIPPING_DIFFERS section. If you see SHIPPING_DIFFERS in the block and you've put that address on the main card, you have it BACKWARDS. Stop and fix.
+
+## Phase 3 — Create the draft quote
+
+Navigate to:
+https://eldvarm.teamdsi.eu/web#action=717&model=sale.order&view_type=list
+
+Click Create and fill the SO header:
+
+| Field | Value |
+|---|---|
+| Customer | The contact from Phase 2 |
+| Customer Reference | from block: Customer Ref line |
+| Incoterms | DAP for EU orders, DDP for non-EU |
+| Pricelist | Should auto-pull as Standard RRP (EUR) from contact. Verify. If Odoo applied something else (e.g. "30% (EUR)"), override to Standard RRP (EUR). |
+| Fiscal Position | EU: leave at Odoo default. DDP: Export/Import |
+
+Sales Person and Payment Terms should pull from the contact, verify they show as Michaela Piehl and Shopify. If not, set them manually here.
+
+## Phase 4 — Add the line items
+
+For each line in the block's LINES section:
+
+1. Click Add a product.
+2. Type the SKU. Wait for autocomplete. Select [SKU] Product Name.
+3. No SKU match: search by product name. Still no match: STOP, tell me.
+4. Set Ordered Qty.
+5. Override Unit Price to the value from the block (don't trust the pricelist auto-fill).
+6. Discount: enter the % in the Disc (%) column.
+
+**MANDATORY for ALL orders (EU and DDP):** the [CNSM-030] Transport line is always present in the block as the final product entry (or last-but-one for DDP, before the Export charges line). It MUST be added to the SO, even if the unit price is €0.00. Odoo will not let the order be confirmed without a transport line. Do NOT skip this line under any circumstance.
+
+For DDP orders, the block also includes a [CNSM-031] Export charges, duties & taxes line as the final entry. That line is also mandatory and must be added.
+
+## Phase 5 — Verify and save
+
+Compare the quote's Total to the block's Shopify total line.
+
+- Tolerance: €0.50 for EU, €0.01 for DDP.
+- Outside tolerance: STOP. Don't save. Show me the figures.
+- Within tolerance: click Save. Quote stays in Draft.
+
+Do NOT click Confirm.
+
+## Phase 6 — Report back
+
+\`\`\`
+✅ Draft quote <SO_NUMBER> created
+   Customer: <name> (<existing | newly created>)
+   Reference: <Customer Ref from block>
+   Lines: <count>
+   Total: €<amount>  (matches | differs by €<delta>)
+
+   Contact card defaults set: Sales Person Michaela Piehl, Payment Terms Shopify, Pricelist Standard RRP (EUR), Segment B2C, Contact type B2C
+   Incoterms: <DAP | DDP>
+   Shipping: <same as billing | child Delivery card added>
+
+   Manual steps for you:
+   - Click Validate on the contact card (always)
+   - <any other flags>
+\`\`\`
+
+## Stop conditions
+
+- Multiple email matches in Phase 2
+- Existing contact found but address differs from block
+- Block doesn't make sense or is incomplete
+- SKU not found in Odoo and no clear name match
+- Total outside tolerance
+- Segment / B2C field can't be found on the contact form
+- Anything ambiguous about First Name / Last Name field labels
+
+## Hard rules
+
+- Block is the only source of truth. Don't go look at Shopify, screenshots, or anywhere else for data.
+- All orders are B2C. Always set the Segment field.
+- **Billing address ALWAYS goes on the main contact card.** Shipping address goes on a child Delivery contact only if the block contains a SHIPPING_DIFFERS section. This convention is fixed, never reverse it.
+- Name split is already done in the block, use First and Last as given.
+- Sales Person on contact = Michaela Piehl. Always.
+- Payment Terms on contact = Shopify. Always.
+- Pricelist on contact = Standard RRP (EUR). Always.
+- Incoterms on SO: DAP for EU, DDP for non-EU. Never blank.
+- Always override unit price on each line, never trust pricelist auto-fill.
+- ALL orders (EU and DDP) MUST include a [CNSM-030] Transport line, even if the price is €0.00. Odoo will not allow the order to be confirmed without it. DDP orders additionally MUST include the [CNSM-031] Export charges, duties & taxes line.
+- Stop at Save. Never Confirm. Never Validate.
+- Use browser_batch to chain actions whenever the next step doesn't need a screenshot to plan. One batched call beats five sequential ones.
+- For First/Last name fields on B2C contacts, set values via JavaScript, not coordinate clicks.
+- Incoterms is a native select, not an autocomplete. Set it via JavaScript by option value.
+- If coordinate clicks miss twice in a row, switch to JavaScript instead of nudging pixels.
+
+---
+
+## ORDER BLOCK TO PROCESS
+
+`;
+
+copyBtn.addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(outputEl.textContent);
+    const orig = copyBtn.textContent;
+    copyBtn.textContent = 'Copied';
+    setTimeout(() => copyBtn.textContent = orig, 1200);
+  } catch (e) {
+    setStatus('Copy failed: ' + e.message, 'err');
+  }
+});
+
+downloadBtn.addEventListener('click', () => {
+  const blob = new Blob([outputEl.textContent], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'eldvarm-order-block.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+renderProductLines();
+recalc();
+</script>
+
+</body>
+</html>

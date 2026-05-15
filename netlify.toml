@@ -1,0 +1,8 @@
+[build]
+  publish = "."
+
+# Pretty URL: /tools/odoo-prep instead of /tools/odoo-prep.html
+[[redirects]]
+  from = "/tools/odoo-prep"
+  to   = "/tools/odoo-prep.html"
+  status = 200

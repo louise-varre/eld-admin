@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Eldvarm Admin</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%99%EF%B8%8F%3C/text%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --ink: #1a1a1a;
+        --paper: #f5f2ec;
+        --paper-2: #ecebe5;
+        --rule: #e3e0d8;
+        --muted: #777268;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { height: 100%; }
+      body {
+        font-family:
+          ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        background: var(--paper);
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .page {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 80px 32px 64px;
+      }
+
+      header {
+        margin-bottom: 56px;
+      }
+      header .eyebrow {
+        font-size: 11px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      header h1 {
+        margin-top: 10px;
+        font-size: 32px;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      @media (min-width: 640px) {
+        .grid { grid-template-columns: 1fr 1fr; }
+      }
+
+      .card {
+        display: block;
+        padding: 24px;
+        background: #fff;
+        border: 1px solid var(--rule);
+        border-radius: 8px;
+        text-decoration: none;
+        color: inherit;
+        transition: border-color 0.15s ease, transform 0.15s ease;
+      }
+      .card:hover { border-color: #c9c5bd; transform: translateY(-1px); }
+      .card .icon {
+        font-size: 22px;
+        margin-bottom: 14px;
+      }
+      .card h2 {
+        font-size: 16px;
+        font-weight: 500;
+        margin-bottom: 6px;
+      }
+      .card p {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+      .card .url {
+        margin-top: 14px;
+        font-size: 11px;
+        color: #a39c8e;
+        word-break: break-all;
+      }
+
+      footer {
+        margin-top: 64px;
+        font-size: 11px;
+        color: var(--muted);
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header>
+        <p class="eyebrow">Eldvarm</p>
+        <h1>Admin</h1>
+      </header>
+
+      <section class="grid">
+        <a class="card" href="https://eldvarm-cms.netlify.app/articles">
+          <div class="icon">📝</div>
+          <h2>Articles</h2>
+          <p>Write and send blog posts to Shopify. Block-based editor with image, product and collection pickers.</p>
+          <div class="url">eldvarm-cms.netlify.app/articles</div>
+        </a>
+
+        <a class="card" href="https://eldvarm-cms.netlify.app/tools/resize">
+          <div class="icon">🖼️</div>
+          <h2>Image resize</h2>
+          <p>Crop and resize photos to the right preset for Shopify, the blog, banners, Instagram and Stories.</p>
+          <div class="url">eldvarm-cms.netlify.app/tools/resize</div>
+        </a>
+
+        <a class="card" href="https://export-invoice-generator.netlify.app">
+          <div class="icon">📄</div>
+          <h2>Export invoice generator</h2>
+          <p>Generate the commercial invoice for international export shipments.</p>
+          <div class="url">export-invoice-generator.netlify.app</div>
+        </a>
+
+        <a class="card" href="./tools/odoo-prep.html">
+          <div class="icon">📦</div>
+          <h2>Shopify → Odoo prep</h2>
+          <p>Turn a Shopify order export into the lines you need to enter in Odoo. Calculates DDP, FX, transport.</p>
+          <div class="url">/tools/odoo-prep</div>
+        </a>
+      </section>
+
+      <footer>One login per tool. This page just gathers the links.</footer>
+    </main>
+  </body>
+</html>
